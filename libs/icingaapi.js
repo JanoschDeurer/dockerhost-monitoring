@@ -230,16 +230,18 @@ icingaapi.prototype.getServiceWithState = function (state, callback) {
         return callback(e, null);
     });
 }
-icingaapi.prototype.createHost = function (template, host, displayname, gruppe, onServer, callback) {
+icingaapi.prototype.createHost = function (template, host, displayname, gruppe, onServer, address, callback) {
     var self = this;
     var state;
+    var attrs = {
+      "display_name": displayname,
+      "vars.group": gruppe,
+      "vars.server": onServer,
+      "address": address
+    }
     var hostObj = JSON.stringify({
         "templates": [template],
-        "attrs": {
-            "display_name": displayname,
-            "vars.group": gruppe,
-            "vars.server": onServer
-        }
+        "attrs": attrs
     })
     this.createHostCustom(hostObj, host, callback);
 }

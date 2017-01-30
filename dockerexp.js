@@ -133,6 +133,9 @@ docker.listContainers(opts, function (err, containers) {
         var container = docker.getContainer(containers[i].Id);
         //write an array with all containers on docker host
         container.inspect(function (err, conData) {
+	    var networks =  conData.NetworkSettings.Networks;
+            // Take the firs network as we can only handle one address per container
+            var address = networks[Object.keys(networks)[0]].IPAddress;
             if (conData.Config.Labels == null) {
                 dockerCon.push({
                     "id": conData.Id.slice(0, 12),
@@ -140,6 +143,7 @@ docker.listContainers(opts, function (err, containers) {
                     "state": conData.State.Status,
                     "pid": conData.State.Pid,
                     "started": conData.State.StartedAt,
+                    "address": address,
                     "processes": null
                 });
 
@@ -152,6 +156,7 @@ docker.listContainers(opts, function (err, containers) {
                         "state": conData.State.Status,
                         "pid": conData.State.Pid,
                         "started": conData.State.StartedAt,
+			"address": address,
                         "processes": conData.Config.Labels.processes
                     });
                 }
@@ -241,7 +246,7 @@ function createDiffToDocker(dockerArr, monArr, pCallback) {
             (function (contoSearch) {
                 var se = searchDocker(contoSearch, dockerArr);
                 if (se !== undefined && se != null) {
-                    icingaServer.createHost(templatehost, se.id, se.name, hostgroup, servername, function (err, result) {
+                    icingaServer.createHost(templatehost, se.id, se.name, hostgroup, servername, se.address, function (err, result) {
                         if (err) {
                             logger.error("ER03:" + err);
                             logger.debug("E004:createHost: ID:", se.id, " Name: ", se.name);
