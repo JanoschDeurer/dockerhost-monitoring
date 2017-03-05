@@ -14,6 +14,7 @@ const templatehost = process.env.TEMPLATEHOST;
 const templateservice = process.env.TEMPLATESERVICE;
 const hostgroup = process.env.HOSTGROUP;
 const servicegroup = process.env.SERVICEGROUP
+const defaultMonitoring = process.env.DEFAULT_MONITORING;
 const debugnode = process.env.DEBUGNODE; //if you need debug
 
 
@@ -46,6 +47,7 @@ logger.debug('	TEMPLATEHOST:  ' + templatehost);
 logger.debug('	TEMPLATESERVICE:  ' + templateservice);
 logger.debug('	HOSTGROUP:  ' + hostgroup);
 logger.debug('	SERVICEGROUP:  ' + servicegroup);
+logger.debug('	DEFAULT_MONITORING:  ' + defaultMonitoring);
 logger.debug('	DEBUGNODE:  ' + debugnode);
 
 var dockerCon = []; //arr to write docker container
@@ -136,30 +138,20 @@ docker.listContainers(opts, function (err, containers) {
 	    var networks =  conData.NetworkSettings.Networks;
             // Take the firs network as we can only handle one address per container
             var address = networks[Object.keys(networks)[0]].IPAddress;
+            var containerData = {
+                "id": conData.Id.slice(0, 12),
+                "name": conData.Name.slice(1, conData.Name.length),
+                "state": conData.State.Status,
+                "pid": conData.State.Pid,
+                "started": conData.State.StartedAt,
+                "address": address
+            }
             if (conData.Config.Labels == null) {
-                dockerCon.push({
-                    "id": conData.Id.slice(0, 12),
-                    "name": conData.Name.slice(1, conData.Name.length),
-                    "state": conData.State.Status,
-                    "pid": conData.State.Pid,
-                    "started": conData.State.StartedAt,
-                    "address": address,
-                    "processes": null
-                });
-
-            } else {
-
-                if (conData.Config.Labels.monitoring != "false") {
-                    dockerCon.push({
-                        "id": conData.Id.slice(0, 12),
-                        "name": conData.Name.slice(1, conData.Name.length),
-                        "state": conData.State.Status,
-                        "pid": conData.State.Pid,
-                        "started": conData.State.StartedAt,
-			"address": address,
-                        "processes": conData.Config.Labels.processes
-                    });
-                }
+                containerData.push({"processes": null})
+                dockerCon.push(containerData)
+            } else if (conData.Config.Labels.monitoring != "false") {
+                containerData.push({"processes": conData.Config.Labels.processes})
+                dockerCon.push(containerData)
             }
 
         })
