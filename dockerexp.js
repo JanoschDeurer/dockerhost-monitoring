@@ -146,11 +146,11 @@ docker.listContainers(opts, function (err, containers) {
                 "started": conData.State.StartedAt,
                 "address": address
             }
-            if (conData.Config.Labels == null) {
+            if (conData.Config.Labels == null && defaultMonitoring != "false") {
                 containerData.push({"processes": null})
                 dockerCon.push(containerData)
-            } else if (conData.Config.Labels.monitoring != "false") {
-                containerData.push({"processes": conData.Config.Labels.processes})
+            } else if (conData.Config.Labels != null && conData.Config.Labels.monitoring == "true") {
+                containerData.processes = conData.Config.Labels.processes
                 dockerCon.push(containerData)
             }
 
