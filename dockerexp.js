@@ -136,7 +136,7 @@ docker.listContainers(opts, function (err, containers) {
         //write an array with all containers on docker host
         container.inspect(function (err, conData) {
 	    var networks =  conData.NetworkSettings.Networks;
-            // Take the firs network as we can only handle one address per container
+            // Take the first network as we can only handle one address per container
             var address = networks[Object.keys(networks)[0]].IPAddress;
             var containerData = {
                 "id": conData.Id.slice(0, 12),
@@ -145,9 +145,11 @@ docker.listContainers(opts, function (err, containers) {
                 "pid": conData.State.Pid,
                 "started": conData.State.StartedAt,
                 "address": address
-            }
-            if (conData.Config.Labels == null && defaultMonitoring != "false") {
-                containerData.push({"processes": null})
+            };
+
+            if (conData.Config.Labels.monitoring == null && defaultMonitoring != "false") {
+
+                containerData.processes = null
                 dockerCon.push(containerData)
             } else if (conData.Config.Labels != null && conData.Config.Labels.monitoring == "true") {
                 containerData.processes = conData.Config.Labels.processes
